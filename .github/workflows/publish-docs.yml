@@ -1,0 +1,73 @@
+name: Publish Docs
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    name: Build Documentation
+    runs-on: ubuntu-latest
+
+    steps:
+      # ------------------------------
+      # Checkout
+      # ------------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ------------------------------
+      # Instalar UV
+      # ------------------------------
+      - name: Install UV
+        uses: astral-sh/setup-uv@v1
+        with:
+          version: "latest"
+
+      # ------------------------------
+      # Instalar Python del proyecto
+      # ------------------------------
+      - name: Set up Python 3.14
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      # ------------------------------
+      # Instalar dependencias del proyecto
+      # ------------------------------
+      - name: Sync dependencies
+        run: uv sync --all-extras --dev
+
+      # ------------------------------
+      # Build mkdocs
+      # ------------------------------
+      - name: Build documentation
+        run: uv run mkdocs build --strict
+
+      # ------------------------------
+      # Upload build artifacts
+      # ------------------------------
+      - name: Upload build to pages
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: "site"
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: "${{ steps.deployment.outputs.page_url }}"
+
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v3

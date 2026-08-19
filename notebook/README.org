@@ -1,0 +1,15 @@
+#+title: Add Jupyter Notebook
+
+* Install
+#+begin_src sh
+uv add --group dev jupyterlab ipykernel
+#+end_src
+* Check
+#+begin_src sh
+jupyter lab --version
+#+end_src
+* Run it
+#+begin_src sh
+jupyter lab
+#+end_src
+* Save on this directory

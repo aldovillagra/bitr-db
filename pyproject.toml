@@ -1,0 +1,98 @@
+[project]
+name = "bitr-db"
+version = "0.1.0"
+description = "Proyecto bitr-db"
+authors = [
+  { name = "Aldo A. Villagra B.", email = "aldovillagra@gmail.com" }
+]
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+requires-python = ">= 3.14"
+
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.14",
+]
+
+dependencies = [
+    "pydantic-settings",
+    "python-dotenv",
+    "pandas[excel,output-formatting,parquet,performance]",
+    "sqlalchemy",
+    "psycopg[binary]",
+]
+
+[dependency-groups]
+dev = [
+    "ruff",
+    "pyright",
+    "ipdb",
+    "debugpy",
+    "ipython",
+    "ptpython",
+    "mypy",
+    "isort",
+    "ipython",
+    "pytest",
+    "pytest-cov",
+    "pytest-xdist",
+    "pytest-mock",
+    "faker",
+    "hypothesis",
+    "mkdocs",
+    "mkdocs-material",
+    "mkdocstrings",
+    "mkdocstrings-python",
+]
+
+# Script
+[project.scripts]
+bitr_db = "bitr_db.cli:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+# addopts = [
+#     "-ra",
+#     "--strict-markers",
+#     "--strict-config",
+#     "--cov=bitr_db",
+#     "--cov-report=term-missing",
+#     "--cov-report=html",
+#     "--cov-report=xml",
+# ]
+
+[tool.coverage.run]
+branch = true
+source = ["3.14"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+fail_under = 80
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "if __name__ == .__main__.:",
+]
+
+[tool.hatch.envs.test]
+installer = "uv"
+dependencies = [
+    "pytest",
+    "pytest-cov",
+]
+
+[[tool.hatch.envs.test.matrix]]
+python = ["3.12", "3.13", "3.14"]
+
+[tool.hatch.envs.test.scripts]
+run = "pytest"
+cov = "pytest --cov=3.14 --cov-report=term-missing"

@@ -1,0 +1,58 @@
+# ----------------------------------------
+#   RUFF CONFIGURACIÓN PROFESIONAL
+#   Para proyectos con layout src/
+#   Compatible con Pyright + Mypy
+# ----------------------------------------
+
+# Lenguaje y versión mínima
+
+target-version = "py314"
+
+# Directorios a analizar
+src = ["src"]
+
+# Activar todos los checks importantes
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "W",   # warnings
+    "B",   # bugbear
+    "I",   # import sorting
+    "UP",  # pyupgrade
+    "N",   # naming conventions
+    "ASYNC",  # async issues
+    "S",   # bandit (security)
+    "A",   # flake8-builtins (evita shadowing peligroso)
+]
+
+# Ignorar reglas ruidosas que no aporta mucho
+ignore = [
+    "E501",     # long lines (black/ruff format can handle)
+    "B904",     # wrap exceptions -- depende de estilo personal
+]
+
+# Auto-fix habilitado
+fix = true
+
+# Excluir carpetas que no deben ser analizadas
+exclude = [
+    ".git",
+    ".venv",
+    ".direnv",
+    "dist",
+    "build",
+    "__pycache__",
+    "docs",
+    "notebooks",
+]
+
+
+# Orden de imports (compat con black)
+[lint.isort]
+combine-as-imports = true
+force-single-line = false
+
+[format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "lf"

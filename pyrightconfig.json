@@ -1,0 +1,22 @@
+{
+  "pythonVersion": "3.14",
+  "venv": ".venv",
+  "exclude": [
+    "**/__pycache__",
+    ".venv",
+    ".git",
+    ".direnv",
+    "dist",
+    "build"
+  ],
+
+  "executionEnvironments": [
+    {
+      "root": "src"
+    }
+  ],
+
+  "reportMissingImports": true,
+  "reportMissingTypeStubs": false,
+  "useLibraryCodeForTypes": true
+}
