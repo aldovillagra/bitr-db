@@ -20,7 +20,7 @@ classifiers = [
 dependencies = [
     "pydantic-settings",
     "python-dotenv",
-    "pandas[excel,output-formatting,parquet,performance]",
+    "pandas[performance]",
     "sqlalchemy",
     "psycopg[binary]",
 ]
