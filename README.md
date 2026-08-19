@@ -1,6 +1,6 @@
 # bitr-db
 
-Proyecto generado con **Copier + UV**.
+DB globally settings and connection
 
 ## 🚀 Crear entorno
 
