@@ -49,8 +49,8 @@ dev = [
 ]
 
 # Script
-[project.scripts]
-bitr_db = "bitr_db.cli:app"
+# [project.scripts]
+# bitr_db = "bitr_db.cli:app"
 
 [build-system]
 requires = ["hatchling"]
