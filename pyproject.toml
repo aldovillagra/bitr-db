@@ -1,6 +1,6 @@
 [project]
 name = "bitr-db"
-version = "0.1.1"
+version = "0.2.0"
 description = "Proyecto bitr-db"
 authors = [
   { name = "Aldo A. Villagra B.", email = "aldovillagra@gmail.com" }
@@ -22,7 +22,24 @@ dependencies = [
     "python-dotenv",
     "pandas[performance]",
     "sqlalchemy",
+]
+
+[project.optional-dependencies]
+postgres = [
     "psycopg[binary]",
+]
+
+mysql = [
+    "pymysql",
+]
+
+mariadb = [
+    "pymysql",
+]
+
+all = [
+    "psycopg[binary]",
+    "pymysql",
 ]
 
 [dependency-groups]
@@ -31,7 +48,6 @@ dev = [
     "pyright",
     "ipdb",
     "debugpy",
-    "ipython",
     "ptpython",
     "mypy",
     "isort",
@@ -71,7 +87,7 @@ pythonpath = ["src"]
 
 [tool.coverage.run]
 branch = true
-source = ["3.14"]
+source = ["bitr_db"]
 
 [tool.coverage.report]
 show_missing = true
@@ -91,7 +107,7 @@ dependencies = [
 ]
 
 [[tool.hatch.envs.test.matrix]]
-python = ["3.12", "3.13", "3.14"]
+python = ["3.14"]
 
 [tool.hatch.envs.test.scripts]
 run = "pytest"
