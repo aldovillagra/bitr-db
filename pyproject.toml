@@ -1,6 +1,6 @@
 [project]
 name = "bitr-db"
-version = "0.2.0"
+version = "0.2.1"
 description = "Proyecto bitr-db"
 authors = [
   { name = "Aldo A. Villagra B.", email = "aldovillagra@gmail.com" }

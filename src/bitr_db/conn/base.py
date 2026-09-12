@@ -4,7 +4,6 @@ import re
 from typing import Any
 from collections.abc import Mapping, Sequence
 
-import pandas as pd
 from sqlalchemy import Engine, create_engine, text
 from sqlalchemy.sql.elements import TextClause
 
@@ -37,17 +36,24 @@ class DatabaseConnection:
     El dialecto SQL lo determina el Engine de SQLAlchemy.
     """
 
+    import pandas as pd
+
     def __init__(self, config: DatabaseSettings):
         self.config = config
+        self.url = config.sqlalchemy_url
         self.engine: Engine | None = None
 
     def _connect(self) -> Engine:
         """
-        Crea el Engine de forma lazy.
+        Crea el Engine una sola vez y siempre lo retorna.
+
+        El Engine administra el pool de conexiones. No se debe mantener
+        una conexión individual abierta como atributo de la clase salvo
+        que exista una necesidad específica.
         """
         if self.engine is None:
             self.engine = create_engine(
-                self.config.sqlalchemy_url,
+                self.url,
                 **self.config.engine_kwargs,
             )
 
@@ -55,10 +61,15 @@ class DatabaseConnection:
 
     def _quote_identifier(self, identifier: str) -> str:
         """
-        Valida y cita un identificador usando el dialecto activo.
+        Valida y cita un identificador SQL.
 
-        PostgreSQL utilizará comillas dobles.
-        MySQL/MariaDB utilizarán backticks.
+        Ejemplos válidos:
+
+            id
+            move_id
+            public.account_move_line
+
+        No permite expresiones SQL arbitrarias.
         """
         if not isinstance(identifier, str):
             raise ValueError("El identificador debe ser un string")
@@ -98,13 +109,12 @@ class DatabaseConnection:
         domains: Sequence[Sequence[Any]] | None = None,
     ) -> tuple[TextClause, dict[str, Any]]:
         """
-        Construye un SELECT parametrizado compatible con los tres motores.
+        Construye un SELECT parametrizado.
         """
         table_sql = self._quote_identifier(model)
 
         if fields:
-            field_sql_list = [self._quote_identifier(field) for field in fields]
-            select_sql = ", ".join(field_sql_list)
+            select_sql = ", ".join(self._quote_identifier(field) for field in fields)
         else:
             select_sql = "*"
 
@@ -127,6 +137,7 @@ class DatabaseConnection:
             field_sql = self._quote_identifier(str(field))
             operator = self._validate_operator(str(operator))
 
+            # Conversión de operadores con NULL.
             if value is None:
                 if operator == "=":
                     operator = "IS"
@@ -138,9 +149,11 @@ class DatabaseConnection:
                 conditions.append(f"{field_sql} {operator} NULL")
                 continue
 
+            # IS e IS NOT solamente deben utilizarse con NULL.
             if operator in {"IS", "IS NOT"}:
                 raise ValueError(f"El operador {operator} requiere valor None")
 
+            # Tratamiento especial para IN y NOT IN.
             if operator in {"IN", "NOT IN"}:
                 if isinstance(value, (str, bytes)):
                     raise ValueError(f"{operator} requiere una secuencia")
@@ -150,6 +163,7 @@ class DatabaseConnection:
                 except TypeError as exc:
                     raise ValueError(f"{operator} requiere una secuencia") from exc
 
+                # Evita generar IN () porque no es SQL válido.
                 if not values:
                     conditions.append("FALSE" if operator == "IN" else "TRUE")
                     continue
@@ -165,6 +179,7 @@ class DatabaseConnection:
                 continue
 
             param_name = f"p_{index}"
+
             conditions.append(f"{field_sql} {operator} :{param_name}")
             params[param_name] = value
 
@@ -205,49 +220,41 @@ class DatabaseConnection:
                 params=dict(params or {}),
             )
 
+    def get_conn(self) -> Engine:
+        """
+        Retorna el Engine, no una conexión abierta.
+        """
+        return self._connect()
+
+    def exec_string(self, sql: str) -> None:
+        """
+        Ejecuta SQL textual.
+
+        No utilices este método con SQL construido a partir de
+        entrada externa no validada.
+        """
+        self.exec(text(sql))
+
     def exec(
         self,
         sql: TextClause,
         params: Mapping[str, Any] | None = None,
-    ) -> int:
+    ) -> None:
         """
-        Ejecuta una sentencia dentro de una transacción.
+        Ejecuta SQL dentro de una transacción administrada.
         """
         engine = self._connect()
 
         with engine.begin() as connection:
-            result = connection.execute(
+            connection.execute(
                 sql,
                 dict(params or {}),
             )
-            return result.rowcount
-
-    def exec_string(
-        self,
-        sql: str,
-        params: Mapping[str, Any] | None = None,
-    ) -> int:
-        """
-        Ejecuta SQL confiable y específico del motor.
-        """
-        return self.exec(text(sql), params)
-
-    def get_engine(self) -> Engine:
-        return self._connect()
 
     def close(self) -> None:
+        """
+        Libera el pool de conexiones.
+        """
         if self.engine is not None:
             self.engine.dispose()
             self.engine = None
-
-    def __enter__(self) -> DatabaseConnection:
-        self._connect()
-        return self
-
-    def __exit__(
-        self,
-        exc_type: type[BaseException] | None,
-        exc_value: BaseException | None,
-        traceback: Any,
-    ) -> None:
-        self.close()
