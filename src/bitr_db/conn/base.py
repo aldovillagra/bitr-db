@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+import pandas as pd
 from typing import Any
 from collections.abc import Mapping, Sequence
 
@@ -35,8 +36,6 @@ class DatabaseConnection:
 
     El dialecto SQL lo determina el Engine de SQLAlchemy.
     """
-
-    import pandas as pd
 
     def __init__(self, config: DatabaseSettings):
         self.config = config
